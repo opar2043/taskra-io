@@ -659,10 +659,10 @@ const Setting = () => {
                   <SectionHeader icon={FaGlobe} title="Social Media Links" />
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     {[
+                      { name: "website", label: "Website", Icon: FaGlobe, placeholder: "https://yourwebsite.com" },
                       { name: "facebook", label: "Facebook", Icon: FaFacebook, placeholder: "https://facebook.com/yourprofile" },
                       { name: "instagram", label: "Instagram", Icon: FaInstagram, placeholder: "https://instagram.com/yourprofile" },
                       { name: "youtube", label: "YouTube", Icon: FaYoutube, placeholder: "https://youtube.com/yourchannel" },
-                      { name: "website", label: "Website", Icon: FaGlobe, placeholder: "https://yourwebsite.com" },
                       { name: "tiktok", label: "TikTok", Icon: FaTiktok, placeholder: "https://tiktok.com/@yourprofile" },
                       { name: "pinterest", label: "Pinterest", Icon: FaPinterest, placeholder: "https://pinterest.com/yourprofile" },
                     ].map((field) => (

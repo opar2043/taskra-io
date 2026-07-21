@@ -8,14 +8,18 @@ import useLoginUser from "../Hooks/useLoginUser";
 
 const LOGO = "https://i.ibb.co/G4k8xvLB/taskra-logo.png";
 
+// Links shown on the right-hand side, next to the auth buttons.
 const navLinks = [
   { label: "Home", to: "/" },
-  { label: "Find a Professional", to: "/search-professional" },
-  { label: "Jobs", to: "/view-alljobs" },
-  { label: "Pricing", to: "/pricing" },
+  // { label: "Pricing", to: "/pricing" },
   { label: "About", to: "/about" },
   { label: "Contact", to: "/contact" },
 ];
+
+// The single role-aware link that sits beside the logo: clients look for
+// professionals, professionals look for jobs. Guests default to the client view.
+const CLIENT_LINK = { label: "Find a Professional", to: "/search-professional" };
+const PRO_LINK = { label: "Jobs", to: "/view-alljobs" };
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
@@ -34,6 +38,8 @@ const Navbar = () => {
     }
   };
 
+  const roleLink = currentUser?.role === "professional" ? PRO_LINK : CLIENT_LINK;
+
   const linkClass = ({ isActive }) =>
     `text-sm font-semibold transition-colors ${
       isActive ? "text-primary" : "text-ink hover:text-primary"
@@ -41,23 +47,37 @@ const Navbar = () => {
 
   return (
     <header className="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-line">
-      <div className="max-w-7xl mx-auto px-6 h-[72px] flex items-center justify-between gap-6">
-        <Link to="/" className="flex items-center shrink-0" aria-label="Taskra home">
-          <img src={LOGO} alt="Taskra" className="h-16 w-auto object-contain" />
-        </Link>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-[64px] sm:h-[72px] flex items-center justify-between gap-3 sm:gap-6">
+        {/* Left: logo + the role-aware link */}
+        <div className="flex items-center gap-3 sm:gap-6 min-w-0">
+          <Link to="/" className="flex items-center shrink-0" aria-label="Taskra home">
+            <img src={LOGO} alt="Taskra" className="h-11 sm:h-14 lg:h-16 w-auto object-contain" />
+          </Link>
 
+          <NavLink
+            to={roleLink.to}
+            className={({ isActive }) =>
+              `hidden sm:inline-flex items-center gap-1 whitespace-nowrap text-sm font-semibold transition-colors ${
+                isActive ? "text-primary" : "text-ink hover:text-primary"
+              }`
+            }
+          >
+            {roleLink.label} <span aria-hidden="true">&rarr;</span>
+          </NavLink>
+        </div>
 
-        
+        {/* Right: the rest of the nav sits with the auth controls; the middle
+            of the bar stays empty. */}
+        <div className="flex items-center gap-6 xl:gap-8 ml-auto">
+          <nav className="hidden lg:flex items-center gap-6 xl:gap-8">
+            {navLinks.map((l) => (
+              <NavLink key={l.to} to={l.to} className={linkClass} end={l.to === "/"}>
+                {l.label}
+              </NavLink>
+            ))}
+          </nav>
 
-        <nav className="hidden lg:flex items-center gap-8">
-          {navLinks.map((l) => (
-            <NavLink key={l.to} to={l.to} className={linkClass} end={l.to === "/"}>
-              {l.label}
-            </NavLink>
-          ))}
-        </nav>
-
-        <div className="hidden lg:flex items-center gap-3">
+          <div className="hidden lg:flex items-center gap-3">
           {user ? (
             <div className="relative">
               <button
@@ -101,6 +121,7 @@ const Navbar = () => {
               </Link>
             </>
           )}
+          </div>
         </div>
 
         <button
@@ -155,7 +176,7 @@ const Navbar = () => {
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto px-6 py-6 space-y-2">
-          {navLinks.map((l) => (
+          {[roleLink, ...navLinks].map((l) => (
             <NavLink
               key={l.to}
               to={l.to}

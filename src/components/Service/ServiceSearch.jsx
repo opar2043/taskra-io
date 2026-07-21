@@ -89,6 +89,7 @@ const ServiceSearch = () => {
   const { user, handleLogin, handleRegister } = useAuth();
   const { currentUser } = useLoginUser() || {};
   const wizardRef = useRef(null);
+  const dateRef = useRef(null);
 
   const [formData, setFormData] = useState({
     category: "",
@@ -486,14 +487,30 @@ const ServiceSearch = () => {
               <div>
                 <label className={labelClass}>Event Date</label>
                 <div className="relative">
-                  <FaCalendarAlt className="absolute left-3 top-1/2 -translate-y-1/2 text-body-text/50 text-xs" />
                   <input
+                    ref={dateRef}
                     type="date"
                     name="date"
                     value={formData.date}
+                    min={new Date().toISOString().split("T")[0]}
                     onChange={handleInputChange}
-                    className={iconInputClass}
+                    // The native picker indicator is hidden (it renders invisibly
+                    // against the light field on some browsers) and replaced by the
+                    // button below, which opens the same picker.
+                    className={`${inputClass} pr-11 [color-scheme:light] [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none`}
                   />
+                  <button
+                    type="button"
+                    aria-label="Open calendar"
+                    onClick={() => {
+                      const el = dateRef.current;
+                      if (el?.showPicker) el.showPicker();
+                      else el?.focus();
+                    }}
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-9 w-9 flex items-center justify-center rounded-lg text-primary hover:bg-primary-tint transition-colors"
+                  >
+                    <FaCalendarAlt className="text-base" />
+                  </button>
                 </div>
               </div>
               <div>
@@ -798,22 +815,24 @@ const ServiceSearch = () => {
       {/* soft radial glow behind the headline */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[780px] h-[420px] bg-primary/[0.06] blur-3xl rounded-full pointer-events-none" />
 
-<div className="relative max-w-6xl mx-auto px-5 md:px-8 pt-10 md:pt-12 min-h-[70vh] flex flex-col justify-center">
+      {/* Top-aligned inside a 70vh band so the search card sits high on the
+          page and is fully visible on first paint. */}
+      <div className="relative max-w-6xl mx-auto px-4 sm:px-5 md:px-8 pt-5 sm:pt-6 md:pt-8 pb-8 md:pb-10 min-h-[70vh] flex flex-col justify-start">
         {/* ---------------- Hero: text-only, centered ---------------- */}
         {step < 6 && (
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
-className="text-center mb-8 md:mb-8"
+            className="text-center mb-5 md:mb-6"
           >
-            <span className="inline-flex items-center gap-2 rounded-full border border-line bg-white/70 px-4 py-1.5 mb-6 text-[11px] font-bold uppercase tracking-[0.2em] text-primary">
+            <span className="inline-flex items-center gap-2 rounded-full border border-line bg-white/70 px-3 sm:px-4 py-1.5 mb-3 md:mb-4 text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.2em] text-primary">
               <FaStar size={11} /> Photography &amp; Videography
             </span>
-<h1 className="mk-h1 text-4xl md:text-5xl lg:text-6xl xl:text-[64px] leading-[1.05] mb-5 mx-auto max-w-4xl">
+            <h1 className="mk-h1 text-[26px] sm:text-[34px] md:text-[42px] lg:text-[48px] leading-[1.12] mb-2.5 md:mb-3 mx-auto max-w-3xl">
               Discover top-rated creatives tailored to your vision
             </h1>
-<p className="mk-lead mx-auto max-w-2xl mb-6 text-base md:text-lg">
+            <p className="mk-lead mx-auto max-w-2xl mb-0 text-sm sm:text-base md:text-lg">
               Tell us what you need and get free quotes within minutes from vetted local
               photographers &amp; videographers.
             </p>
@@ -828,12 +847,12 @@ className="text-center mb-8 md:mb-8"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
-className="mx-auto max-w-4xl -mt-2"
+          className="mx-auto w-full max-w-4xl"
         >
-          <div className="relative rounded-[28px] bg-white border border-line ring-1 ring-black/[0.02] shadow-[0_30px_80px_-30px_rgba(20,20,31,0.30)] overflow-hidden">
+          <div className="relative rounded-2xl sm:rounded-[28px] bg-white border border-line ring-1 ring-black/[0.02] shadow-[0_30px_80px_-30px_rgba(20,20,31,0.30)] overflow-hidden">
             {/* Premium header strip */}
             {step < 6 && (
-              <div className="flex items-center justify-between px-6 md:px-8 pt-6 pb-2">
+              <div className="flex items-center justify-between gap-3 px-4 sm:px-6 md:px-8 pt-4 sm:pt-6 pb-2">
                 <div className="flex items-center gap-2.5">
                   <span className="w-9 h-9 rounded-xl bg-primary text-white flex items-center justify-center shadow-sm">
                     <FaCheckCircle size={16} />
@@ -851,7 +870,7 @@ className="mx-auto max-w-4xl -mt-2"
               </div>
             )}
 
-            <div className="px-6 md:px-8 pb-8 pt-4">
+            <div className="px-4 sm:px-6 md:px-8 pb-6 sm:pb-8 pt-4">
               {/* Step indicator (hidden on the hero search + success screens) */}
               {step > 1 && step < 6 && <Stepper step={step} />}
 
