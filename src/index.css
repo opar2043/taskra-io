@@ -1,0 +1,172 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------------------------------------------------------------------------
+   Taskra Design Tokens — single source of truth (mirrored in tailwind.config.js)
+   Marketing = warm editorial (cream + Fraunces). Dashboard = clean data (Inter).
+   #FE6D06 is the ONLY accent color.
+--------------------------------------------------------------------------- */
+:root {
+  --color-primary: #fe6d06;
+  --color-primary-hover: #e55f00;
+  --color-primary-tint: #fff1e6;
+  --color-ink: #14141f;
+  --color-body: #4b4b57;
+  --color-bg-cream: #f7f5f1;
+  --color-bg-app: #f5f6f8;
+  --color-surface: #ffffff;
+  --color-border: #eceae5;
+  --color-border-app: #e7e9ee;
+  --color-success-bg: #e7f7ec;
+  --color-success-text: #1e9e4d;
+  --color-danger-bg: #fdeaea;
+  --color-danger-text: #e13b3b;
+  --color-pending-bg: #fdecec;
+  --color-pending-text: #e2685f;
+}
+
+body {
+  font-family: "Inter", sans-serif;
+  @apply bg-white text-body-text antialiased;
+}
+
+@layer components {
+  /* ------------------------- Marketing (Travelar mood) ------------------- */
+  .mk-eyebrow {
+    @apply text-xs font-bold uppercase tracking-[0.2em] text-primary;
+  }
+  .mk-h1 {
+    @apply font-display text-5xl md:text-6xl font-semibold leading-[1.1] tracking-tight text-ink;
+  }
+  .mk-h2 {
+    @apply font-display text-3xl md:text-4xl font-semibold leading-[1.15] text-ink;
+  }
+  .mk-lead {
+    @apply text-lg md:text-xl text-body-text leading-relaxed;
+  }
+  .btn-pill {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-primary px-8 py-3.5 text-[15px] font-bold tracking-wide text-white shadow-sm transition-colors hover:bg-primary-hover hover:shadow-md disabled:opacity-60 disabled:pointer-events-none;
+  }
+  .btn-pill-outline {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-line bg-white px-8 py-3.5 text-[15px] font-bold tracking-wide text-ink shadow-sm transition-colors hover:border-ink disabled:opacity-60;
+  }
+  /* Signature offset double-frame image treatment */
+  .frame-img {
+    @apply rounded-2xl bg-white p-2.5 shadow-soft border border-line;
+  }
+  .frame-img > img {
+    @apply w-full h-full object-cover rounded-xl;
+  }
+  .icon-chip {
+    @apply w-12 h-12 rounded-xl bg-primary text-white flex items-center justify-center shrink-0;
+  }
+  .dot-grid {
+    background-image: radial-gradient(rgba(20, 20, 31, 0.12) 1px, transparent 1px);
+    background-size: 16px 16px;
+  }
+
+  /* ------------------------- Dashboard (Finexy mood) --------------------- */
+  .tk-page {
+    @apply p-4 md:p-6 space-y-6;
+  }
+  .tk-page-title {
+    @apply text-xl md:text-[22px] font-semibold text-ink tracking-tight;
+  }
+  .tk-eyebrow {
+    @apply text-xs font-semibold uppercase tracking-wider text-body-text/70;
+  }
+  .tk-section-title {
+    @apply text-[13px] font-semibold uppercase tracking-wide text-body-text/70;
+  }
+  .tk-card {
+    @apply bg-surface rounded-2xl border border-line-app shadow-soft;
+  }
+
+  .tk-btn {
+    @apply inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl text-sm font-semibold transition-colors disabled:opacity-60 disabled:pointer-events-none;
+  }
+  .tk-btn-primary {
+    @apply tk-btn bg-primary text-white hover:bg-primary-hover;
+  }
+  .tk-btn-secondary {
+    @apply tk-btn bg-white text-ink border border-line-app hover:bg-gray-50;
+  }
+  .tk-btn-dark {
+    @apply tk-btn bg-primary text-white hover:bg-primary-hover;
+  }
+  .tk-icon-btn {
+    @apply w-9 h-9 rounded-xl flex items-center justify-center text-body-text hover:bg-gray-100 transition-colors;
+  }
+
+  .tk-input {
+    @apply w-full h-10 px-3 rounded-xl border border-line-app bg-white text-sm text-ink placeholder:text-body-text/50 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition;
+  }
+  .tk-label {
+    @apply block text-sm font-medium text-ink mb-1.5;
+  }
+
+  .tk-table-wrap {
+    @apply tk-card overflow-hidden;
+  }
+  .tk-table {
+    @apply w-full text-left border-collapse;
+  }
+  .tk-thead {
+    @apply bg-app-bg/70 border-b border-line-app;
+  }
+  .tk-th {
+    @apply px-5 py-3 text-xs font-semibold uppercase tracking-wide text-body-text/70 whitespace-nowrap;
+  }
+  .tk-row {
+    @apply border-b border-line-app last:border-b-0 hover:bg-app-bg/50 transition-colors;
+  }
+  .tk-td {
+    @apply px-5 py-4 text-sm text-ink align-middle;
+  }
+  .tk-td-muted {
+    @apply px-5 py-4 text-xs text-body-text/70 align-middle;
+  }
+
+  .tk-badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold;
+  }
+  .tk-badge-success {
+    @apply tk-badge bg-success-bg text-success-text;
+  }
+  .tk-badge-error {
+    @apply tk-badge bg-danger-bg text-danger-text;
+  }
+  .tk-badge-warning {
+    @apply tk-badge bg-pending-bg text-pending-text;
+  }
+  .tk-badge-info {
+    @apply tk-badge bg-primary-tint text-primary;
+  }
+  .tk-badge-neutral {
+    @apply tk-badge bg-gray-100 text-gray-600;
+  }
+
+  .tk-nav-section {
+    @apply px-6 pt-5 pb-1.5 text-[10px] font-medium uppercase tracking-wider text-ink/40;
+  }
+  .tk-nav-link {
+    @apply flex items-center gap-3 mx-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-ink/80 transition-colors hover:bg-primary-tint hover:text-primary;
+  }
+  .tk-nav-link.active {
+    @apply bg-primary-tint text-primary;
+  }
+  /* Nav icons always carry the brand color for quick visual scanning. */
+  .tk-nav-icon {
+    @apply text-primary shrink-0 text-[15px];
+  }
+  /* Distinct red "Back to Home" pill at the foot of the sidebar. */
+  .tk-nav-home {
+    @apply flex items-center gap-3 mx-3 px-3 py-2.5 rounded-xl text-[13px] font-medium bg-danger-text text-white transition-colors hover:bg-[#c22f2f] hover:shadow-sm;
+  }
+  .tk-nav-home .tk-nav-icon {
+    @apply text-white;
+  }
+}
