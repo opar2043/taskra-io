@@ -1,11 +1,12 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
-import { FiArrowLeft } from "react-icons/fi";
+import { FiArrowLeft, FiMessageCircle, FiFileText } from "react-icons/fi";
 import toast from "react-hot-toast";
 import ConversationList from "./ConversationList";
 import ChatWindow from "./ChatWindow";
 import { connectSkt } from "../Hooks/connectSkt";
 import useLoginUser from "../Hooks/useLoginUser";
+import useInboxQuote from "../Hooks/useInboxQuote";
 import useAxios from "../Hooks/useAxios";
 
 const LOGO = "https://i.ibb.co/G4k8xvLB/taskra-logo.png";
@@ -21,8 +22,10 @@ const ChatLayout = () => {
   const [conversations, setConversations] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
   const [messages, setMessages] = useState([]);
+  const [activeTab, setActiveTab] = useState("chat");
   const socket = useRef();
   const axiosSecure = useAxios();
+  const [inboxquote] = useInboxQuote();
 
   useEffect(() => {
     socket.current = connectSkt();
@@ -196,6 +199,14 @@ const ChatLayout = () => {
       ? quoteMessages[quoteMessages.length - 1].quote
       : null;
 
+  // Agreement records tied to this conversation
+  const conversationAgreements = useMemo(() => {
+    if (!selectedChat?._id || !Array.isArray(inboxquote)) return [];
+    return inboxquote.filter(
+      (q) => String(q.conversationId) === String(selectedChat._id),
+    );
+  }, [inboxquote, selectedChat]);
+
   return (
     <div className="h-screen flex flex-col bg-app-bg overflow-hidden">
       {/* ── Top header: logo + back to dashboard ── */}
@@ -231,23 +242,126 @@ const ChatLayout = () => {
           />
         </div>
 
-        {/* Chat window — hidden on mobile until a chat is opened */}
+        {/* Right panel — chat window hidden on mobile until a chat is opened */}
         <div
           className={`h-full flex-col ${
             !selectedChat ? "hidden md:flex" : "flex"
           } flex-1 min-w-0`}
         >
-          <ChatWindow
-            conversation={selectedChat}
-            messages={messages}
-            socket={socket}
-            currentUser={currentUser}
-            pinnedQuote={pinnedQuote}
-            onBack={() => setSelectedChat(null)}
-            onSendMessage={handleSendMessage}
-            onEditMessage={handleEditMessage}
-            onDeleteMessage={handleDeleteMessage}
-          />
+          {/* Tab bar */}
+          {selectedChat && (
+            <div className="flex border-b border-line-app bg-surface shrink-0">
+              <button
+                onClick={() => setActiveTab("chat")}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-semibold transition-colors ${
+                  activeTab === "chat"
+                    ? "text-primary border-b-2 border-primary bg-primary-tint/20"
+                    : "text-body-text/60 hover:text-ink"
+                }`}
+              >
+                <FiMessageCircle size={14} />
+                Chat
+              </button>
+              <button
+                onClick={() => setActiveTab("agreement")}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-semibold transition-colors ${
+                  activeTab === "agreement"
+                    ? "text-primary border-b-2 border-primary bg-primary-tint/20"
+                    : "text-body-text/60 hover:text-ink"
+                }`}
+              >
+                <FiFileText size={14} />
+                Agreement
+              </button>
+            </div>
+          )}
+
+          {activeTab === "chat" ? (
+            <ChatWindow
+              conversation={selectedChat}
+              messages={messages}
+              socket={socket}
+              currentUser={currentUser}
+              pinnedQuote={pinnedQuote}
+              onBack={() => setSelectedChat(null)}
+              onSendMessage={handleSendMessage}
+              onEditMessage={handleEditMessage}
+              onDeleteMessage={handleDeleteMessage}
+            />
+          ) : (
+            <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-app-bg">
+              {conversationAgreements.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full gap-4 opacity-60">
+                  <FiFileText size={48} className="text-primary/40" />
+                  <p className="text-sm text-body-text/70 font-medium">
+                    No agreements yet for this conversation
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold text-ink">
+                    Agreements ({conversationAgreements.length})
+                  </h3>
+                  {conversationAgreements.map((ag) => {
+                    const statusColor =
+                      ag.status === "accepted" || ag.status === "confirm"
+                        ? "text-success-text"
+                        : ag.status === "pending" || ag.status === "sent"
+                          ? "text-pending-text"
+                          : "text-primary";
+                    return (
+                      <div
+                        key={ag._id}
+                        className="tk-card p-4 space-y-3"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <FiFileText className="text-primary shrink-0" />
+                            <span className="text-sm font-semibold text-ink">
+                              {ag.requirement?.slice(0, 50) || "Agreement"}
+                            </span>
+                          </div>
+                          <span className={`text-[11px] font-bold uppercase ${statusColor}`}>
+                            {ag.status}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-4 text-xs text-body-text/70">
+                          <span className="font-semibold text-ink">
+                            £{ag.price}
+                          </span>
+                          {ag.timeline && (
+                            <>
+                              <span className="w-1 h-1 rounded-full bg-line-app" />
+                              <span>
+                                {new Date(ag.timeline).toLocaleDateString("en-GB", {
+                                  month: "short",
+                                  day: "numeric",
+                                  year: "numeric",
+                                })}
+                              </span>
+                            </>
+                          )}
+                          {ag.signedAt && (
+                            <>
+                              <span className="w-1 h-1 rounded-full bg-line-app" />
+                              <span>
+                                Signed: {new Date(ag.signedAt).toLocaleDateString("en-GB")}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                        {ag.legalTerms && (
+                          <p className="text-xs text-body-text/60 line-clamp-2">
+                            {ag.legalTerms}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

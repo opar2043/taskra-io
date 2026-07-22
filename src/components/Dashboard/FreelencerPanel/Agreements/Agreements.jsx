@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import jsPDF from "jspdf";
 // html2canvas-pro supports modern CSS color functions (oklch/lab/lch) that
@@ -35,6 +36,7 @@ const DEFAULT_TERMS =
   "1. PAYMENT: A non-refundable deposit is required to secure the date. 2. CANCELLATION: Cancellations within 48 hours will incur a fee. 3. USAGE: The freelancer retains copyright unless otherwise agreed.";
 
 const Agreements = () => {
+  const navigate = useNavigate();
   const [inboxquote, refetch, isLoading] = useInboxQuote();
   const { currentUser } = useLoginUser() || {};
   const axiosSecure = useAxios();
@@ -48,26 +50,23 @@ const Agreements = () => {
   const contractRef = useRef(null);
   const sigPad = useRef(null);
 
-  // Builder modal state
-  const [showBuilder, setShowBuilder] = useState(false);
-  const [creating, setCreating] = useState(false);
-  const [draft, setDraft] = useState({
-    clientName: "",
-    clientEmail: "",
-    requirement: "",
-    price: "",
-    timeline: "",
-    legalTerms: DEFAULT_TERMS,
-  });
-
   const agreements = useMemo(() => {
     if (!Array.isArray(inboxquote)) return [];
+    const isAdmin = currentUser?.role === "admin";
+    if (isAdmin) return inboxquote;
     const isFreelancer = currentUser?.role === "professional";
-    return inboxquote.filter((p) =>
-      isFreelancer
-        ? p.freelancerId === currentUser?._id
-        : p.clientId === currentUser?._id
-    );
+    const myId = String(currentUser?._id || "");
+    const myEmail = (currentUser?.email || "").toLowerCase();
+    return inboxquote.filter((p) => {
+      if (isFreelancer) {
+        if (myId && String(p.freelancerId) === myId) return true;
+        if (myEmail && String(p.freelancerEmail || "").toLowerCase() === myEmail) return true;
+        return false;
+      }
+      if (myId && String(p.clientId) === myId) return true;
+      if (myEmail && String(p.clientEmail || "").toLowerCase() === myEmail) return true;
+      return false;
+    });
   }, [inboxquote, currentUser]);
 
   const filtered = useMemo(() => {
@@ -79,48 +78,6 @@ const Agreements = () => {
   }, [agreements, searchTerm]);
 
   const isExecuted = (a) => a.status === "accepted" || a.status === "confirm";
-
-  /* -------- Builder: create a new agreement (POST /inbox-quote) -------- */
-  const handleCreate = async (e) => {
-    e.preventDefault();
-    if (!currentUser?._id) return toast.error("Please log in first");
-    setCreating(true);
-    try {
-      const res = await axiosSecure.post("/inbox-quote", {
-        freelancerId: currentUser._id,
-        clientName: draft.clientName,
-        clientEmail: draft.clientEmail,
-        clientPhoto: "",
-        requirement: draft.requirement,
-        price: Number(draft.price),
-        timeline: draft.timeline,
-        legalTerms: draft.legalTerms,
-        status: "pending",
-        createdAt: new Date(),
-      });
-      if (res.data?._id || res.data?.insertedId) {
-        toast.success("Agreement created — it is now awaiting signature.");
-        setShowBuilder(false);
-        setDraft({
-          clientName: "",
-          clientEmail: "",
-          requirement: "",
-          price: "",
-          timeline: "",
-          legalTerms: DEFAULT_TERMS,
-        });
-        refetch();
-      }
-    } catch (err) {
-      toast.error(
-        err.response?.data?.message ||
-          err.response?.data?.error ||
-          "Failed to create agreement"
-      );
-    } finally {
-      setCreating(false);
-    }
-  };
 
   /* -------- Send to client (POST /api/emails/send, {{token}} template) -------- */
   const handleSendToClient = async (agreement) => {
@@ -243,7 +200,7 @@ const Agreements = () => {
             between you and your clients.
           </p>
           <button
-            onClick={() => setShowBuilder(true)}
+            onClick={() => navigate("/dashboard/find-freelancers")}
             className="tk-btn-primary mt-2"
           >
             <FiPlus /> New Agreement
@@ -619,143 +576,6 @@ const Agreements = () => {
         </div>
       )}
 
-      {/* -------- Agreement builder modal -------- */}
-      {showBuilder && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-ink/50 backdrop-blur-sm p-4">
-          <form
-            onSubmit={handleCreate}
-            className="tk-card w-full max-w-xl max-h-[90vh] overflow-y-auto"
-          >
-            <div className="px-6 py-4 border-b border-line-app flex justify-between items-center sticky top-0 bg-surface z-10">
-              <div>
-                <h3 className="text-base font-semibold text-ink">
-                  Build Professional Agreement
-                </h3>
-                <p className="text-xs text-body-text/70 mt-0.5">
-                  Combine your quote and legal contract into one document.
-                </p>
-              </div>
-              <button
-                type="button"
-                className="tk-icon-btn"
-                onClick={() => setShowBuilder(false)}
-              >
-                <FiX size={18} />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="tk-label">Client Name</label>
-                  <input
-                    type="text"
-                    required
-                    className="tk-input"
-                    value={draft.clientName}
-                    onChange={(e) =>
-                      setDraft((p) => ({ ...p, clientName: e.target.value }))
-                    }
-                    placeholder="e.g. Sarah Thompson"
-                  />
-                </div>
-                <div>
-                  <label className="tk-label">Client Email</label>
-                  <input
-                    type="email"
-                    required
-                    className="tk-input"
-                    value={draft.clientEmail}
-                    onChange={(e) =>
-                      setDraft((p) => ({ ...p, clientEmail: e.target.value }))
-                    }
-                    placeholder="client@email.com"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="tk-label">Scope of Work</label>
-                <textarea
-                  required
-                  rows={3}
-                  className="tk-input h-auto py-3 resize-none"
-                  value={draft.requirement}
-                  onChange={(e) =>
-                    setDraft((p) => ({ ...p, requirement: e.target.value }))
-                  }
-                  placeholder="Describe the project scope and deliverables..."
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="tk-label">Total Price</label>
-                  <div className="relative">
-                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-body-text/60 font-semibold">
-                      £
-                    </span>
-                    <input
-                      type="number"
-                      required
-                      min="1"
-                      className="tk-input pl-8"
-                      value={draft.price}
-                      onChange={(e) =>
-                        setDraft((p) => ({ ...p, price: e.target.value }))
-                      }
-                      placeholder="0.00"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="tk-label">Project Date</label>
-                  <input
-                    type="date"
-                    required
-                    className="tk-input"
-                    value={draft.timeline}
-                    onChange={(e) =>
-                      setDraft((p) => ({ ...p, timeline: e.target.value }))
-                    }
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="tk-label">Contract Terms & Conditions</label>
-                <textarea
-                  required
-                  rows={5}
-                  className="tk-input h-auto py-3 font-mono text-xs text-body-text resize-none"
-                  value={draft.legalTerms}
-                  onChange={(e) =>
-                    setDraft((p) => ({ ...p, legalTerms: e.target.value }))
-                  }
-                  placeholder="Paste your legal terms, cancellation policy, and payment schedule here..."
-                />
-              </div>
-            </div>
-
-            <div className="px-6 py-4 border-t border-line-app flex justify-end gap-3 sticky bottom-0 bg-surface">
-              <button
-                type="button"
-                onClick={() => setShowBuilder(false)}
-                className="tk-btn-secondary"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={creating}
-                className="tk-btn-primary"
-              >
-                {creating ? "Creating..." : "Create Agreement"}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
     </div>
   );
 };

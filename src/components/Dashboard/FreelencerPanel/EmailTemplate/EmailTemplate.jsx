@@ -392,8 +392,10 @@ const EmailTemplate = () => {
   const clientNameOf = (j) =>
     j?.fullName || j?.name || j?.client_name || j?.clientName || "";
 
-  // Only offer jobs that actually carry a client name in the "Send To" list.
-  const clientJobs = (jobs || []).filter((j) => clientNameOf(j));
+  // Only offer jobs that carry a client name and are not completed.
+  const clientJobs = (jobs || []).filter(
+    (j) => clientNameOf(j) && j.status != "completed",
+  );
 
   const handleUpdateTemplate = (field, value) => {
     setTemplates((prev) =>
@@ -786,7 +788,7 @@ const EmailTemplate = () => {
                   }
                   className="tk-btn-secondary"
                 >
-                  {activeTab === "edit" ? (
+                  {activeTab == "edit" ? (
                     <>
                       <FiEye /> Preview
                     </>
